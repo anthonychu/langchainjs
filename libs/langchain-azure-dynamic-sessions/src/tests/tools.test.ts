@@ -32,9 +32,9 @@ describe("SessionsPythonREPLTool", () => {
       let token = await defaultAzureADTokenProvider();
       expect(token).toBe("test-token");
       expect(getTokenMock).toHaveBeenCalledTimes(1);
-      expect(getTokenMock).toHaveBeenCalledWith(
-        "https://acasessions.io/.default"
-      );
+      expect(getTokenMock.mock.calls[0][0]).toEqual([
+        "https://acasessions.io/.default",
+      ]);
 
       getTokenMock.mockImplementationOnce(async () => ({
         token: "test-token2",
@@ -118,7 +118,7 @@ describe("SessionsPythonREPLTool", () => {
             "Content-Type": "application/json",
             Authorization: "Bearer test-token",
             "User-Agent": expect.stringMatching(
-              /^@langchain\/azure-dynamic-sessions\/\d+\.\d+\.\d+ \(Language=JavaScript.*\)$/
+              /^langchainjs-azure-dynamic-sessions\s@langchain\/azure-dynamic-sessions\/\d+\.\d+\.\d+ \(Language=JavaScript.*\)$/
             ),
           },
           body: JSON.stringify({
