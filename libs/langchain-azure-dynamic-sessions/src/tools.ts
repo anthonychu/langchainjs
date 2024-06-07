@@ -78,6 +78,22 @@ export class SessionsPythonREPLTool extends Tool {
     return "SessionsPythonREPLTool";
   }
 
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      poolManagementEndpoint:
+        "AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      poolManagementEndpoint: "pool_management_endpoint",
+      sessionId: "session_id",
+    };
+  }
+
   name = "sessions-python-repl-tool";
 
   description =
