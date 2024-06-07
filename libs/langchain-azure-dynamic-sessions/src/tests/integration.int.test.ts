@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { config } from "dotenv";
 import { SessionsPythonREPLTool } from "../tools.js";

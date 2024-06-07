@@ -84,7 +84,9 @@ export class SessionsPythonREPLTool extends Tool {
     "Returns the result, stdout, and stderr. ";
 
   poolManagementEndpoint: string;
+
   sessionId: string;
+
   azureADTokenProvider: () => Promise<string>;
 
   constructor(params: SessionsPythonREPLToolParams) {
@@ -140,8 +142,7 @@ export class SessionsPythonREPLTool extends Tool {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const json = await response.json();
-    const properties = json.properties;
+    const { properties } = await response.json();
     const output = {
       result: properties.result,
       stdout: properties.stdout,
@@ -174,7 +175,7 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    return json["value"][0].properties as RemoteFile;
+    return json.value[0].properties as RemoteFile;
   }
 
   async downloadFile(params: { remoteFilename: string }): Promise<Blob> {
@@ -215,13 +216,16 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    const list = json["value"].map((x: any) => x.properties);
+    const list = json.value.map(
+      (x: { properties: RemoteFile }) => x.properties
+    );
     return list as RemoteFile[];
   }
 }
 
-const defaultAzureADTokenProvider = () =>
-  getBearerTokenProvider(
+function defaultAzureADTokenProvider() {
+  return getBearerTokenProvider(
     new DefaultAzureCredential(),
     "https://cognitiveservices.azure.com/.default"
   );
+}

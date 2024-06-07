@@ -4,14 +4,14 @@ import { SessionsPythonREPLTool } from "../index.js";
 
 describe("SessionsPythonREPLTool", () => {
   describe("Default access token provider", () => {
-    let defaultAccessTokenProvider: () => Promise<string>;
+    let defaultAzureADTokenProvider: () => Promise<string>;
     let getTokenMock: jest.SpiedFunction<DefaultAzureCredential["getToken"]>;
     beforeEach(() => {
       const tool = new SessionsPythonREPLTool({
         poolManagementEndpoint: "https://poolmanagement.com",
         sessionId: "session-id",
       });
-      defaultAccessTokenProvider = tool.accessTokenProvider;
+      defaultAzureADTokenProvider = tool.azureADTokenProvider;
       getTokenMock = jest.spyOn(DefaultAzureCredential.prototype, "getToken");
       getTokenMock.mockClear();
     });
@@ -24,28 +24,24 @@ describe("SessionsPythonREPLTool", () => {
     test("Should use cached token when not expiring", async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date("2024-01-01 10:00:00"));
-      getTokenMock.mockImplementationOnce(async () => {
-        return {
-          token: "test-token",
-          expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
-        };
-      });
+      getTokenMock.mockImplementationOnce(async () => ({
+        token: "test-token",
+        expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
+      }));
 
-      let token = await defaultAccessTokenProvider();
+      let token = await defaultAzureADTokenProvider();
       expect(token).toBe("test-token");
       expect(getTokenMock).toHaveBeenCalledTimes(1);
       expect(getTokenMock).toHaveBeenCalledWith(
         "https://acasessions.io/.default"
       );
 
-      getTokenMock.mockImplementationOnce(async () => {
-        return {
-          token: "test-token2",
-          expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
-        };
-      });
+      getTokenMock.mockImplementationOnce(async () => ({
+        token: "test-token2",
+        expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
+      }));
 
-      token = await defaultAccessTokenProvider();
+      token = await defaultAzureADTokenProvider();
       expect(token).toBe("test-token");
       expect(getTokenMock).toHaveBeenCalledTimes(1);
     });
@@ -53,26 +49,22 @@ describe("SessionsPythonREPLTool", () => {
     test("Should refresh token when expired", async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date("2024-01-01 10:00:00"));
-      getTokenMock.mockImplementationOnce(async () => {
-        return {
-          token: "test-token1",
-          expiresOnTimestamp: new Date("2024-01-01 10:30:00").getTime(),
-        };
-      });
+      getTokenMock.mockImplementationOnce(async () => ({
+        token: "test-token1",
+        expiresOnTimestamp: new Date("2024-01-01 10:30:00").getTime(),
+      }));
 
-      let token = await defaultAccessTokenProvider();
+      let token = await defaultAzureADTokenProvider();
       expect(token).toBe("test-token1");
       expect(getTokenMock).toHaveBeenCalledTimes(1);
 
       jest.setSystemTime(new Date("2024-01-01 10:31:00"));
-      getTokenMock.mockImplementationOnce(async () => {
-        return {
-          token: "test-token2",
-          expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
-        };
-      });
+      getTokenMock.mockImplementationOnce(async () => ({
+        token: "test-token2",
+        expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
+      }));
 
-      token = await defaultAccessTokenProvider();
+      token = await defaultAzureADTokenProvider();
       expect(token).toBe("test-token2");
       expect(getTokenMock).toHaveBeenCalledTimes(2);
     });
@@ -126,7 +118,7 @@ describe("SessionsPythonREPLTool", () => {
             "Content-Type": "application/json",
             Authorization: "Bearer test-token",
             "User-Agent": expect.stringMatching(
-              /^\@langchain\/azure-dynamic-sessions\/\d+\.\d+\.\d+ \(Language=JavaScript.*\)$/
+              /^@langchain\/azure-dynamic-sessions\/\d+\.\d+\.\d+ \(Language=JavaScript.*\)$/
             ),
           },
           body: JSON.stringify({
