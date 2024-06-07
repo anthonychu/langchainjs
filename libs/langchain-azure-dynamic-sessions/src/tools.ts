@@ -1,4 +1,5 @@
 import { Tool } from "@langchain/core/tools";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   DefaultAzureCredential,
   getBearerTokenProvider,
@@ -91,21 +92,23 @@ export class SessionsPythonREPLTool extends Tool {
 
   azureADTokenProvider: () => Promise<string>;
 
-  constructor(params: SessionsPythonREPLToolParams) {
+  constructor(params?: SessionsPythonREPLToolParams) {
     super();
 
-    if (!params.poolManagementEndpoint) {
+    this.poolManagementEndpoint =
+      params?.poolManagementEndpoint ??
+      getEnvironmentVariable(
+        "AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT"
+      ) ??
+      "";
+
+    if (!this.poolManagementEndpoint) {
       throw new Error("poolManagementEndpoint is required.");
     }
-    this.poolManagementEndpoint = params.poolManagementEndpoint;
 
-    this.sessionId = params.sessionId ?? uuidv4();
-
-    if (params.azureADTokenProvider) {
-      this.azureADTokenProvider = params.azureADTokenProvider;
-    } else {
-      this.azureADTokenProvider = defaultAzureADTokenProvider();
-    }
+    this.sessionId = params?.sessionId ?? uuidv4();
+    this.azureADTokenProvider =
+      params?.azureADTokenProvider ?? defaultAzureADTokenProvider();
   }
 
   _buildUrl(path: string) {
