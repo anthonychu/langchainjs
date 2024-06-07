@@ -8,6 +8,8 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
+const userAgentPrefix = "langchainjs-azure-dynamic-sessions";
+
 let userAgent = "";
 async function getuserAgentSuffix(): Promise<string> {
   try {
@@ -19,10 +21,10 @@ async function getuserAgentSuffix(): Promise<string> {
         "utf8"
       );
       const json = await JSON.parse(data);
-      userAgent = `${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
+      userAgent = `${userAgentPrefix} ${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
     }
   } catch (e) {
-    userAgent = "@langchain/azure-dynamic-sessions (Language=JavaScript)";
+    userAgent = "${userAgentPrefix} (Language=JavaScript)";
   }
   return userAgent;
 }
