@@ -4,9 +4,9 @@ import {
   getBearerTokenProvider,
 } from "@azure/identity";
 import { v4 as uuidv4 } from "uuid";
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { readFile } from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 let userAgent = "";
 async function getuserAgentSuffix(): Promise<string> {
@@ -14,7 +14,10 @@ async function getuserAgentSuffix(): Promise<string> {
     if (!userAgent) {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
-      const data = await readFile(path.join(__dirname, '..', 'package.json'), 'utf8');
+      const data = await readFile(
+        path.join(__dirname, "..", "package.json"),
+        "utf8"
+      );
       const json = await JSON.parse(data);
       userAgent = `${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
     }
@@ -29,7 +32,7 @@ export interface SessionsPythonREPLToolParams {
    * The endpoint of the pool management service.
    */
   poolManagementEndpoint: string;
-  
+
   /**
    * The session ID. If not provided, a new session ID will be generated.
    */
@@ -39,7 +42,7 @@ export interface SessionsPythonREPLToolParams {
    * A function that returns the access token to be used for authentication.
    * If not provided, a default implementation that uses the DefaultAzureCredential
    * will be used.
-   * 
+   *
    * @returns The access token to be used for authentication.
    */
   azureADTokenProvider?: () => Promise<string>;
@@ -67,7 +70,6 @@ export interface RemoteFile {
   $id: string;
 }
 
-
 export class SessionsPythonREPLTool extends Tool {
   static lc_name() {
     return "SessionsPythonREPLTool";
@@ -75,7 +77,8 @@ export class SessionsPythonREPLTool extends Tool {
 
   name = "sessions-python-repl-tool";
 
-  description = "A Python shell. Use this to execute python commands " +
+  description =
+    "A Python shell. Use this to execute python commands " +
     "when you need to perform calculations or computations. " +
     "Input should be a valid python command. " +
     "Returns the result, stdout, and stderr. ";
@@ -102,7 +105,9 @@ export class SessionsPythonREPLTool extends Tool {
   }
 
   _buildUrl(path: string) {
-    let url = `${this.poolManagementEndpoint}${this.poolManagementEndpoint.endsWith("/") ? "" : "/"}${path}`;
+    let url = `${this.poolManagementEndpoint}${
+      this.poolManagementEndpoint.endsWith("/") ? "" : "/"
+    }${path}`;
     url += url.includes("?") ? "&" : "?";
     url += `identifier=${encodeURIComponent(this.sessionId)}`;
     url += `&api-version=2024-02-02-preview`;
@@ -114,7 +119,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl("code/execute");
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
     const body = JSON.stringify({
@@ -122,7 +127,7 @@ export class SessionsPythonREPLTool extends Tool {
         codeInputType: "inline",
         executionType: "synchronous",
         code: pythonCode,
-      }
+      },
     });
 
     const response = await fetch(apiUrl, {
@@ -152,7 +157,7 @@ export class SessionsPythonREPLTool extends Tool {
     const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files/upload");
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
     const formData = new FormData();
@@ -176,7 +181,7 @@ export class SessionsPythonREPLTool extends Tool {
     const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
 
@@ -196,7 +201,7 @@ export class SessionsPythonREPLTool extends Tool {
     const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files");
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
 
