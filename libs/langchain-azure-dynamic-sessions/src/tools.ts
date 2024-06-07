@@ -1,5 +1,8 @@
 import { Tool } from "@langchain/core/tools";
-import { AccessToken, DefaultAzureCredential } from "@azure/identity";
+import {
+  DefaultAzureCredential,
+  getBearerTokenProvider,
+} from "@azure/identity";
 import { v4 as uuidv4 } from "uuid";
 import { readFile } from 'fs/promises';
 import path from 'path';
@@ -39,7 +42,7 @@ export interface SessionsPythonREPLToolParams {
    * 
    * @returns The access token to be used for authentication.
    */
-  accessTokenProvider?: () => Promise<string>;
+  azureADTokenProvider?: () => Promise<string>;
 }
 
 export interface RemoteFile {
@@ -79,7 +82,7 @@ export class SessionsPythonREPLTool extends Tool {
 
   poolManagementEndpoint: string;
   sessionId: string;
-  accessTokenProvider: () => Promise<string>;
+  azureADTokenProvider: () => Promise<string>;
 
   constructor(params: SessionsPythonREPLToolParams) {
     super();
@@ -91,10 +94,10 @@ export class SessionsPythonREPLTool extends Tool {
 
     this.sessionId = params.sessionId ?? uuidv4();
 
-    if (params.accessTokenProvider) {
-      this.accessTokenProvider = params.accessTokenProvider;
+    if (params.azureADTokenProvider) {
+      this.azureADTokenProvider = params.azureADTokenProvider;
     } else {
-      this.accessTokenProvider = defaultAccessTokenProviderFactory();
+      this.azureADTokenProvider = defaultAzureADTokenProvider();
     }
   }
 
@@ -107,7 +110,7 @@ export class SessionsPythonREPLTool extends Tool {
   }
 
   async _call(pythonCode: string) {
-    const token = await this.accessTokenProvider();
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("code/execute");
     const headers = {
       "Content-Type": "application/json",
@@ -142,8 +145,11 @@ export class SessionsPythonREPLTool extends Tool {
     return JSON.stringify(output, null, 2);
   }
 
-  async uploadFile(params: { data: Blob, remoteFilename: string }) : Promise<RemoteFile> {
-    const token = await this.accessTokenProvider();
+  async uploadFile(params: {
+    data: Blob;
+    remoteFilename: string;
+  }): Promise<RemoteFile> {
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files/upload");
     const headers = {
       "Authorization": `Bearer ${token}`,
@@ -167,7 +173,7 @@ export class SessionsPythonREPLTool extends Tool {
   }
 
   async downloadFile(params: { remoteFilename: string }): Promise<Blob> {
-    const token = await this.accessTokenProvider();
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
       "Authorization": `Bearer ${token}`,
@@ -186,8 +192,8 @@ export class SessionsPythonREPLTool extends Tool {
     return await response.blob();
   }
 
-  async listFiles() : Promise<RemoteFile[]> {
-    const token = await this.accessTokenProvider();
+  async listFiles(): Promise<RemoteFile[]> {
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files");
     const headers = {
       "Authorization": `Bearer ${token}`,
@@ -209,13 +215,8 @@ export class SessionsPythonREPLTool extends Tool {
   }
 }
 
-function defaultAccessTokenProviderFactory() {
-  let cachedToken: AccessToken | undefined;
-  return async () => {
-    const credentials = new DefaultAzureCredential();
-    if (!cachedToken || cachedToken.expiresOnTimestamp < Date.now() + (5 * 60 * 1000)) {
-      cachedToken = await credentials.getToken("https://acasessions.io/.default");
-    }
-    return cachedToken.token;
-  };
-}
+const defaultAzureADTokenProvider = () =>
+  getBearerTokenProvider(
+    new DefaultAzureCredential(),
+    "https://cognitiveservices.azure.com/.default"
+  );
