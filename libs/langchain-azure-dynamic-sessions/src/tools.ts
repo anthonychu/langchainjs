@@ -247,6 +247,6 @@ export class SessionsPythonREPLTool extends Tool {
 function defaultAzureADTokenProvider() {
   return getBearerTokenProvider(
     new DefaultAzureCredential(),
-    "https://cognitiveservices.azure.com/.default"
+    "https://acasessions.io/.default"
   );
 }
