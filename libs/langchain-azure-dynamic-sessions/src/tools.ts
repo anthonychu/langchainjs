@@ -25,7 +25,7 @@ async function getuserAgentSuffix(): Promise<string> {
       userAgent = `${userAgentPrefix} ${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
     }
   } catch (e) {
-    userAgent = "${userAgentPrefix} (Language=JavaScript)";
+    userAgent = `${userAgentPrefix} (Language=JavaScript)`;
   }
   return userAgent;
 }
