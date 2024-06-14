@@ -29,9 +29,6 @@
     "test:single": {
       "dependsOn": ["^build", "build"]
     },
-    "test:single": {
-      "dependsOn": ["^build", "build"]
-    },
     "test:integration": {
       "dependsOn": ["^build", "build"]
     },

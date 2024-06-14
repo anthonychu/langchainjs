@@ -463,17 +463,6 @@ export class ChatMistralAI<
     };
   }
 
-  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
-    const params = this.invocationParams(options);
-    return {
-      ls_provider: "mistral",
-      ls_model_name: this.model,
-      ls_model_type: "chat",
-      ls_temperature: params.temperature ?? undefined,
-      ls_max_tokens: params.maxTokens ?? undefined,
-    };
-  }
-
   _llmType() {
     return "mistral_ai";
   }

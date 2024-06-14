@@ -1,6 +1,4 @@
 import { test } from "@jest/globals";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -13,7 +11,6 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { ChatVertexAI } from "../chat_models.js";
 import { GeminiTool } from "../types.js";
 
